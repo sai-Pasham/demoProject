@@ -1,14 +1,15 @@
+
 ###updating libraries###
 execute "apt-get-update" do
   command "apt-get update"
   ignore_failure true
 end
 
- ###installing tomcat7###
+###installing tomcat7###
 package 'tomcat7' do
         action :install
 end
- 
+
 ###Clearing tomcat7 webapps ROOT folder###
 bash 'Clearing tomcat7 webapps ROOT folder' do
   user 'root'
@@ -25,38 +26,21 @@ cookbook_file "/var/lib/tomcat7/webapps/onewar.war" do
  # notifies :restart, "service[tomcat7]"
 end
 
-cookbook_file "/var/lib/tomcat7/conf/server.xml" do
-  source "server.xml"
-  mode "0644"
- # notifies :restart, "service[tomcat7]"
-end
-
-#cookbook_file "/var/lib/tomcat7/conf/web.xml" do
-#  source "web.xml"
-#  mode "0644"
- # notifies :restart, "service[tomcat7]"
-#end
-
-cookbook_file "/var/lib/tomcat7/conf/domain.crt" do
-  source "domain.crt"
-  mode "0644"
-  #notifies :restart, "service[tomcat7]"
-end
-
-cookbook_file "/var/lib/tomcat7/conf/domain.key" do
-  source "domain.key"
-  mode "0644"
-  notifies :restart, "service[tomcat7]"
-end
-
 ###restarting tomcat7 service###
 service 'tomcat7' do
   supports :restart => true
 end
 
-#firewall_rule 'allow world to tomcat' do
-#  port 8443
-#  source '0.0.0.0/0'
-#  only_if { windows? && node['firewall']['allow_tomcat'] }
-#end
+# open standard ssh port
+firewall_rule 'ssh' do
+  port     22
+  command  :allow
+end
 
+# open standard http port to tcp traffic only; insert as first rule
+firewall_rule 'http' do
+  port     80
+  protocol :tcp
+  position 1
+  command   :allow
+end
